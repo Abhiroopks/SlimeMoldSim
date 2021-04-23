@@ -1,4 +1,5 @@
 import numpy as np
+from EdgeSetter import EdgeSetter
 
 # Returns approximation of the maze in
 # T. Nakagaki, H. Yamada, and A. Toth. Maze-solving by an amoeboid organism. Nature, 407:470, 2000.
@@ -35,7 +36,7 @@ def TakagakiMaze():
     edgesetter = EdgeSetter(D,L,pos)
     
     # initialize the edges and lengths
-    edgesetter.setEdge(D,L,0,1,pos)            
+    edgesetter.setEdge(0,1)          
     edgesetter.setEdge(1,2)            
     edgesetter.setEdge(3,4)            
     edgesetter.setEdge(1,4)            
@@ -96,24 +97,3 @@ def exampleMaze0():
     
     return {'L': L, 'D': D, 'pos': pos}
     
-"""
-Create both edges:
-* frm -> to
-* to -> from
-
-Calculates edge length from node positions
-
-"""
-class EdgeSetter:
-    
-    def __init__(self, D, L, pos):
-        self.D = D
-        self.L = L
-        self.pos = pos
-
-
-def setEdge(frm, to):
-    
-    length = np.linalg.norm((np.array(self.pos[frm]) - np.array(self.pos[to])), 2)
-    self.D[frm][to] = self.D[to][frm] = 1
-    self.L[frm][to] = self.L[to][frm] = length
