@@ -57,7 +57,7 @@ def TakagakiMaze():
     edgesetter.setEdge(11,12)            
     edgesetter.setEdge(17,18)            
     
-    return {'L': L, 'D': D, 'pos': pos}
+    return {'L': L, 'D': D, 'pos': pos, 'src': 0, 'sinks' : [18]}
     
 # Returns another example maze
 def exampleMaze0():
@@ -95,5 +95,5 @@ def exampleMaze0():
     edgesetter.setEdge(6,7)
     edgesetter.setEdge(7,8)
     
-    return {'L': L, 'D': D, 'pos': pos}
+    return {'L': L, 'D': D, 'pos': pos, 'src': 0, 'sinks': [8]}
     

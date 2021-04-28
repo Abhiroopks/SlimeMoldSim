@@ -1,7 +1,8 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-from tkinter import *
+import tkinter as tk
+import tkinter.simpledialog
 from EdgeSetter import EdgeSetter
 import numpy as np
 
@@ -20,8 +21,8 @@ class DrawGraph:
         
     def userDrawGraph(self):
 
-        root = Tk()
-        self.canvas= Canvas(root, width=600, height=600)
+        root = tk.Tk()
+        self.canvas= tk.Canvas(root, width=600, height=600)
         canvas = self.canvas
 
         canvas.pack()
@@ -31,7 +32,7 @@ class DrawGraph:
         canvas.bind("<Button-1>", self.leftclick)
 
         canvas.mainloop()
-
+        
         pos = self.pos
         edges = self.edges
         N = len(pos)
@@ -43,9 +44,44 @@ class DrawGraph:
 
         for i in range(len(edges)):
             edgesetter.setEdge(edges[i][0], edges[i][1])
-
-
-        return {'L': L, 'D': D, 'pos': pos}
+            
+        # Ask user which node is source, and which are sinks
+        print('Specify the source node by index')
+        valid = False
+        
+        while not valid:
+            source_node = int(input())
+            if source_node < len(pos) and source_node >= 0:
+                valid = True
+            else:
+                print(f'Invalid index for source node. Must be: 0 <= index < {len(pos)}')
+        
+        
+        print('Specify the sink nodes by index, separated by single spaces')
+        
+        valid = False
+        
+        while not valid:
+            valid = True
+            
+            sink_nodes = input().split(' ')
+            
+            for i in range(len(sink_nodes)):
+                if int(sink_nodes[i]) < 0:
+                    print(f'Invalid index for sink node: {sink_nodes[i]}. Must be >= 0 ')
+                    valid = False
+                    break
+                elif not int(sink_nodes[i]) < len(pos):
+                    print(f'Invalid index for sink node: {sink_nodes[i]}. Must be < {len(pos)}')
+                    valid = False
+                    break
+                elif int(sink_nodes[i]) == source_node:
+                    print(f'Sink node cannot be same as source node. Choose index other than {source_node}')
+                    valid = False
+                    break
+                       
+        
+        return {'L': L, 'D': D, 'pos': pos, 'src': source_node, 'sinks': sink_nodes}
 
     def leftclick(self,event):
 
@@ -56,6 +92,9 @@ class DrawGraph:
         pos[len(pos)] = [(event.x - 300)/300, (300 - event.y)/300]
 
         self.canvas.create_oval(event.x - R, event.y - R, event.x + R, event.y + R, fill='red', outline='blue')
+        
+        # Draw text for index of this point
+        self.canvas.create_text(event.x, event.y,fill='#fff', state=tk.DISABLED, text=str(len(pos)-1))
 
 
     def isCoordWithinPoint(self,point, coord):
@@ -102,6 +141,7 @@ class DrawGraph:
         latestLine = self.latestLine
         edges = self.edges
         canvas = self.canvas
+        pos = self.pos
 
         (ind0, ind1) = self.isLineAcceptable(canvas.coords(latestLine))
 
@@ -113,6 +153,9 @@ class DrawGraph:
 
         # Store this edge
         edges.append((ind0, ind1))
+        
+        # Center endpoints of line within center of nodes
+        canvas.coords(latestLine, 300*pos[ind0][0] + 300, -(300*pos[ind0][1] - 300), 300*pos[ind1][0] + 300, -(300*pos[ind1][1] - 300))
 
 
     def rightclick(self,event):
@@ -124,7 +167,7 @@ class DrawGraph:
         coords["y"] = event.y
 
         # create a line on this point and store it in the list
-        self.latestLine = self.canvas.create_line(coords["x"],coords["y"],coords["x"],coords["y"])
+        self.latestLine = self.canvas.create_line(coords["x"],coords["y"],coords["x"],coords["y"], width=3)
 
     def rightdrag(self, e):
         coords = self.coords
