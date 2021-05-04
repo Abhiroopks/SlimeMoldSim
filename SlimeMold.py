@@ -43,7 +43,11 @@ def main(args):
     graph = nx.from_numpy_matrix(D)
     
     N = len(L)
-
+    
+    node_colors = ['grey']*N
+    node_colors[src] = 'lightgreen'
+    node_colors[sink] = 'lightgreen'
+    
     try:
         for round in range(args.rounds):
 
@@ -56,10 +60,9 @@ def main(args):
 
             plt.cla()
             #fig = plt.figure()
-            nx.draw(graph, pos, 
+            nx.draw(graph, pos, node_color=node_colors,
                     width=list(weights * 100),
-                    with_labels=True,
-                    node_color='lightgreen')
+                    with_labels=True)
 
             plt.savefig(f'images/graph{str(round).zfill(2)}.png', dpi=200)
 
