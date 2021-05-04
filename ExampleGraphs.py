@@ -57,43 +57,5 @@ def TakagakiMaze():
     edgesetter.setEdge(11,12)            
     edgesetter.setEdge(17,18)            
     
-    return {'L': L, 'D': D, 'pos': pos, 'src': 0, 'sinks' : [18]}
-    
-# Returns another example maze
-def exampleMaze0():
-    
-    N = 10
-    
-    # Length, width of edges
-    L = np.ones((N,N))
-    D = np.zeros((N,N))
-    
-    # dict of x,y coords for each node. Useful for visualization in networkx
-    pos = {}
-    pos[0] = [-1, -1]
-    pos[1] = [-1, 0]
-    pos[2] = [-0.5, 1]
-    pos[3] = [-0.5, 0]
-    pos[4] = [-0.5, -1]
-    pos[5] = [0.5, 1]
-    pos[6] = [1, 1]
-    pos[7] = [1, -1]
-    pos[8] = [0.5, -1]
-    pos[9] = [-1, 1]
-    
-    edgesetter = EdgeSetter(D,L,pos)
-    
-    # initialize the edges and lengths
-    edgesetter.setEdge(0,1)
-    edgesetter.setEdge(1,9)
-    edgesetter.setEdge(2,9)
-    edgesetter.setEdge(1,3)
-    edgesetter.setEdge(3,4)
-    edgesetter.setEdge(2,5)
-    edgesetter.setEdge(5,6)
-    edgesetter.setEdge(5,8)
-    edgesetter.setEdge(6,7)
-    edgesetter.setEdge(7,8)
-    
-    return {'L': L, 'D': D, 'pos': pos, 'src': 0, 'sinks': [8]}
+    return {'L': L, 'D': D, 'pos': pos, 'src': 0, 'sink' : [18]}
     

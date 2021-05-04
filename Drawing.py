@@ -11,8 +11,27 @@ class DrawGraph:
     def __init__(self):
 
         self.pos = {}
-        self.R = 10
-
+        self.root = tk.Tk('Graph Canvas')
+        
+        width  = self.root.winfo_screenwidth()
+        height = self.root.winfo_screenheight()
+        self.width = int(min(width,height))
+        
+        self.R = self.width / 40
+        
+        self.root.geometry(f'{int(self.width)}x{int(self.width)}')
+        
+        self.root.resizable(0,0)
+        
+        self.canvas= tk.Canvas(self.root)
+        self.canvas.pack_propagate(0)
+        
+        self.canvas.pack(fill=tk.BOTH, expand=1)
+        self.canvas.bind("<Button-3>", self.rightclick)
+        self.canvas.bind("<B3-Motion>", self.rightdrag)
+        self.canvas.bind("<ButtonRelease-3>", self.rightRelease)
+        self.canvas.bind("<Button-1>", self.leftclick)
+        
         # Used for keeping track of line being drawn
         self.coords = {"x":0,"y":0,"x2":0,"y2":0}
         self.latestLine = None
@@ -20,26 +39,39 @@ class DrawGraph:
         self.edges = []
         
     def userDrawGraph(self):
+        
+        
+        helpMessage ="""
+        To create new node: click left mouse button at desired location.\n
+        To create new edge: click and drag right mouse button from one node to another.\n
+        When finished, simply close the graph canvas window.
+        """
+        
+        print(helpMessage)
+        
+        self.canvas.mainloop()
 
-        root = tk.Tk()
-        self.canvas= tk.Canvas(root, width=600, height=600)
-        canvas = self.canvas
-
-        canvas.pack()
-        canvas.bind("<Button-3>", self.rightclick)
-        canvas.bind("<B3-Motion>", self.rightdrag)
-        canvas.bind("<ButtonRelease-3>", self.rightRelease)
-        canvas.bind("<Button-1>", self.leftclick)
-
-        canvas.mainloop()
         
         pos = self.pos
         edges = self.edges
         N = len(pos)
+        
+        source_node = None
+        sink_node = None
+        
         # Length, width of edges
         L = np.ones((N,N))
         D = np.zeros((N,N)) 
-
+        
+        if N == 0:
+            print('No nodes created. Exiting now')
+            return {'L': L, 'D': D, 'pos': None, 'src': source_node, 'sink': sink_node}
+        
+        if len(edges) == 0:
+            print('No edges created. Exiting now')
+            return {'L': L, 'D': D, 'pos': None, 'src': source_node, 'sink': sink_node}
+        
+        
         edgesetter = EdgeSetter(D,L,pos)
 
         for i in range(len(edges)):
@@ -48,9 +80,17 @@ class DrawGraph:
         # Ask user which node is source, and which are sinks
         print('Specify the source node by index')
         valid = False
-        
+                
         while not valid:
-            source_node = int(input())
+            
+            raw = input()
+            
+            try:
+                source_node = int(raw)
+            except:
+                print(f'Enter a valid integer! Invalid input: {raw}')
+                continue
+            
             if source_node < len(pos) and source_node >= 0:
                 valid = True
             else:
@@ -62,49 +102,52 @@ class DrawGraph:
         valid = False
         
         while not valid:
+            
+            raw = input()
+            
+            try:
+                sink_node = int(raw)
+            except:
+                print(f'Enter a valid integer! Invalid input: {raw}')
+                continue
+            if sink_node == source_node:
+                print(f'Sink cannot be same as source node. Choose index other than {source_node}')
+                continue   
+            if sink_node >= len(pos) or sink_node < 0:
+                print(f'Invalid index for sink node. Must be: 0 <= index < {len(pos)}')
+                continue
+                
             valid = True
-            
-            sink_nodes = input().split(' ')
-            
-            for i in range(len(sink_nodes)):
-                if int(sink_nodes[i]) < 0:
-                    print(f'Invalid index for sink node: {sink_nodes[i]}. Must be >= 0 ')
-                    valid = False
-                    break
-                elif not int(sink_nodes[i]) < len(pos):
-                    print(f'Invalid index for sink node: {sink_nodes[i]}. Must be < {len(pos)}')
-                    valid = False
-                    break
-                elif int(sink_nodes[i]) == source_node:
-                    print(f'Sink node cannot be same as source node. Choose index other than {source_node}')
-                    valid = False
-                    break
-                       
-        
-        return {'L': L, 'D': D, 'pos': pos, 'src': source_node, 'sinks': sink_nodes}
+
+        return {'L': L, 'D': D, 'pos': pos, 'src': source_node, 'sink': sink_node}
 
     def leftclick(self,event):
+        
+        ind = self.isCoordAcceptable([event.x, event.y])
+        if ind != -1:
+            print('Invalid point. Cannot be overlapping another node.')
+            return
 
         pos = self.pos
         R = self.R
 
         # Store position of node in dict
-        pos[len(pos)] = [(event.x - 300)/300, (300 - event.y)/300]
+        pos[len(pos)] = [(event.x - self.width)/self.width, (self.width - event.y)/self.width]
 
         self.canvas.create_oval(event.x - R, event.y - R, event.x + R, event.y + R, fill='red', outline='blue')
         
         # Draw text for index of this point
-        self.canvas.create_text(event.x, event.y,fill='#fff', state=tk.DISABLED, text=str(len(pos)-1))
+        self.canvas.create_text(event.x, event.y, font=('Arial', int(self.R/2)), fill='#fff', state=tk.DISABLED, text=str(len(pos)-1))
 
 
     def isCoordWithinPoint(self,point, coord):
 
         R = self.R
 
-        x = (coord[0]-300)/300
-        y = (300 - coord[1])/300
+        x = (coord[0]-self.width)/self.width
+        y = (self.width - coord[1])/self.width
 
-        R_adj = R/300
+        R_adj = R/self.width
 
         leftx = point[0] - R_adj
         lefty = point[1] + R_adj
@@ -150,12 +193,16 @@ class DrawGraph:
             print("Invalid line")
             canvas.delete(latestLine)
             return
+        if ind0 == ind1:
+            print("Invalid line. Cannot draw edge from a node to itself.")
+            canvas.delete(latestLine)
+            return
 
         # Store this edge
         edges.append((ind0, ind1))
         
         # Center endpoints of line within center of nodes
-        canvas.coords(latestLine, 300*pos[ind0][0] + 300, -(300*pos[ind0][1] - 300), 300*pos[ind1][0] + 300, -(300*pos[ind1][1] - 300))
+        canvas.coords(latestLine, self.width*pos[ind0][0] + self.width, -(self.width*pos[ind0][1] - self.width), self.width*pos[ind1][0] + self.width, -(self.width*pos[ind1][1] - self.width))
 
 
     def rightclick(self,event):

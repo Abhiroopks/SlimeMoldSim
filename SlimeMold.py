@@ -9,15 +9,16 @@ import sys
 
 def main(args):
 
-    parser = argparse.ArgumentParser(description='Simulate slime mold behavior in a maze')
+    parser = argparse.ArgumentParser(description='Simulate slime mold behavior in a maze. Creates MP4 video of simulation. If video creation does not work, you can still see the frames in the images/ folder. For best results , make sure there is an actual path from source to sink!')
     
     group = parser.add_mutually_exclusive_group()
     
-    group.add_argument('--custom', action='store_true',help='Allow user to draw a custom maze')
-    group.add_argument('--example', default='takagaki', choices=['takagaki','maze0'], help='Specify an example maze to use')
+    group.add_argument('--custom', action='store_true',help='Allows you to draw a custom maze')
+    group.add_argument('--example', action='store_true', help='Use the example takagaki maze instead of making your own')
     
-    parser.add_argument('--video', action='store_true', help='Create .MP4 video of simulation')
-    parser.add_argument('--rounds', type=int, default=25, help='Number of time steps to simulate')
+    parser.add_argument('--videoname', type=str, default='animation.mp4', help='Specify filename to save simulation video as (.mp4 file).')
+    parser.add_argument('--framerate', type=int, default=2, help='Framerate of video in frames/second')
+    parser.add_argument('--rounds', type=int, default=30, help='Number of time steps to simulate')
  
     args = parser.parse_args(args[1:])
     
@@ -27,92 +28,94 @@ def main(args):
     
     if args.custom:
         graph_params = DrawGraph().userDrawGraph()
-    elif args.example == 'takagaki':
-        graph_params = ExampleGraphs.TakagakiMaze()
     else:
-        graph_params = ExampleGraphs.exampleMaze0()
+        graph_params = ExampleGraphs.TakagakiMaze()
 
     D = graph_params['D']
     L = graph_params['L']
     pos = graph_params['pos']
     src = graph_params['src']
-    sinks = graph_params['sinks']
+    sink = graph_params['sink']
+    
+    if not pos:
+        return
 
     graph = nx.from_numpy_matrix(D)
     
     N = len(L)
 
-    for round in range(args.rounds):
+    try:
+        for round in range(args.rounds):
 
-        # Update nx graph edges for visualization
-        for i in range(N):
-            for j in range(i, N):
-                if(D[i][j] != 0):
-                    graph[i][j]['weight'] = D[i][j]
-        weights = [graph[u][v]['weight'] for u,v in graph.edges()]
+            # Update nx graph edges for visualization
+            for i in range(N):
+                for j in range(i, N):
+                    if(D[i][j] != 0):
+                        graph[i][j]['weight'] = D[i][j]
+            weights = [graph[u][v]['weight'] for u,v in graph.edges()]
 
-        plt.cla()
-        #fig = plt.figure()
-        nx.draw(graph, pos, 
-                width=list(weights * 100),
-                with_labels=True,
-                node_color='lightgreen')
+            plt.cla()
+            #fig = plt.figure()
+            nx.draw(graph, pos, 
+                    width=list(weights * 100),
+                    with_labels=True,
+                    node_color='lightgreen')
 
-        plt.savefig(f'images/graph{str(round).zfill(2)}.png', dpi=200)
+            plt.savefig(f'images/graph{str(round).zfill(2)}.png', dpi=200)
 
-        #fig.show()
+            #fig.show()
 
-        #plt.close(fig)
+            #plt.close(fig)
 
-        # sum of currents leaving each node using KCL
-        sums = np.zeros(N)
-        sums[src] = 1
-        sink_flow = -1 / len(sinks)
+            # sum of currents leaving each node using KCL
+            sums = np.zeros(N)
+            sums[src] = 1
+            sums[sink] = -1
 
-        for sink in sinks:
-            sums[int(sink)] = sink_flow
 
-        # Conductance of edges = D / L
-        cond = np.divide(D,L)
+            # Conductance of edges = D / L
+            cond = np.divide(D,L)
 
-        # Solve for node pressures 
+            # Solve for node pressures 
 
-        A = - np.copy(cond)
+            A = - np.copy(cond)
 
-        for i in range(N):
-            A[i][i] = np.sum(cond[i]) - cond[i][i]
+            for i in range(N):
+                A[i][i] = np.sum(cond[i]) - cond[i][i]
 
-        # Pressure of sink nodes is 0
-        #for sink in sinks:
-        #    A[int(sink), :] = 0
+            # Pressure of sink node is 0
+            A[sink, :] = 0
 
-        A_inv = np.linalg.pinv(A)
+            A_inv = np.linalg.pinv(A)
 
-        press = np.matmul(A_inv,sums)
+            press = np.matmul(A_inv,sums)
 
-        # Update diameters using slime mold algorithm
+            # Update diameters using slime mold algorithm
 
-        # difference in pressure between nodes
-        dP = np.zeros((N,N))
-        for i in range(N):
-            for j in range(i, N):
-                dP[i][j] = press[i] - press[j]
-                dP[j][i] = - dP[i][j]
+            # difference in pressure between nodes
+            dP = np.zeros((N,N))
+            for i in range(N):
+                for j in range(i, N):
+                    dP[i][j] = press[i] - press[j]
+                    dP[j][i] = - dP[i][j]
 
-        #print("dP:" + str(dP))
+            #print("dP:" + str(dP))
 
-        # Flow through each edge
-        Q = cond * dP
+            # Flow through each edge
+            Q = cond * dP
 
-        # Update diameters
-        D = 0.5*( (Q*dP / (L*press[src])) + D)
+            # Update diameters
+            D = 0.5*( (Q*dP / (L*press[src])) + D)
         
+    except:
+        print('Something weird happened during simulation :( Try redrawing your graph')
+        return
         
         
     # Create mp4 from images
     import subprocess
 
-    cmd = "ffmpeg -y -framerate 2 -i images/graph%2d.png animation.mp4"
+    cmd = f"ffmpeg -y -framerate {args.framerate} -i images/graph%2d.png {args.videoname}"
     returned_value = subprocess.call(cmd)  # returns the exit code in unix
     if returned_value == 0:
         print('Successfully created MP4 video of animation')
