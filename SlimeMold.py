@@ -6,6 +6,7 @@ import importlib
 from Drawing import DrawGraph
 import argparse
 import sys
+import os
 
 def main(args):
 
@@ -22,6 +23,13 @@ def main(args):
  
     args = parser.parse_args(args[1:])
     
+    # Create images folder if not there already
+    curr_dir = os.path.dirname(os.path.realpath(__file__))
+    images_dir = 'images'
+    images_path = os.path.join(curr_dir, images_dir)
+    
+    if not os.path.isdir(images_path): 
+        os.mkdir(images_path)
     
     # Get the maze
     graph_params = None
@@ -64,7 +72,7 @@ def main(args):
                     width=list(weights * 100),
                     with_labels=True)
 
-            plt.savefig(f'images/graph{str(round).zfill(2)}.png', dpi=200)
+            plt.savefig(f'{images_dir}/graph{str(round).zfill(2)}.png', dpi=200)
 
             #fig.show()
 
