@@ -7,6 +7,7 @@ from Drawing import DrawGraph
 import argparse
 import sys
 import os
+import glob
 
 def main(args):
 
@@ -30,7 +31,14 @@ def main(args):
     
     if not os.path.isdir(images_path): 
         os.mkdir(images_path)
-    
+    else:
+        files = glob.glob(images_path + '/*.png', recursive=False)
+        for f in files:
+            try:
+                os.remove(f)
+            except OSError as e:
+                print("Error: %s : %s" % (f, e.strerror))
+                    
     # Get the maze
     graph_params = None
     

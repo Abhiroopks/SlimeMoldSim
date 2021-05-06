@@ -97,7 +97,7 @@ class DrawGraph:
                 print(f'Invalid index for source node. Must be: 0 <= index < {len(pos)}')
         
         
-        print('Specify the sink nodes by index, separated by single spaces')
+        print('Specify the sink node by index')
         
         valid = False
         
