@@ -1,6 +1,6 @@
 # Implementing and visualizing slime mold algorithm
 
-This tool is a fun 
+This tool allows you to draw your own maze, specify start and end points, and simulate the slime mold algorithm.
 
 ```
 usage: SlimeMold.py [-h] [--custom | --example] [--videoname VIDEONAME] [--framerate FRAMERATE] [--rounds ROUNDS]
@@ -11,7 +11,7 @@ still see the frames in the images/ folder. For best results , make sure there i
 optional arguments:
   -h, --help            show this help message and exit
   --custom              Allows you to draw a custom maze
-  --example             Use the example takagaki maze instead of making your own
+  --example             Use the example (approximate) Nakagaki maze instead of making your own
   --videoname VIDEONAME
                         Specify filename to save simulation video as (.mp4 file).
   --framerate FRAMERATE
@@ -21,17 +21,18 @@ optional arguments:
   ```
 
 ### Python Dependencies
-* Python 3.9 (probably works with lower versions but haven't tested)
-* tkinter
-* networkx
+* Python 3.9 (probably works with lower versions of Python3 but haven't tested)
+* pip : https://pip.pypa.io/en/stable/installing/
+* tkinter : ``` pip install tk ```
+* networkx : ``` pip install networkx ```
 ### System Dependencies
-* ffmpeg
+* ffmpeg : https://ffmpeg.org/download.html
 
 ### Notes
+* Examples of GUI, terminal messages, start/end maze images, and animation video is available in ```examples/``` directory
 * To create the mp4, ffmpeg needs to be installed on your system and added to system PATH, so the python script can run it
 * If ffmpeg is not installed, you can still find the images of the algorithm's time steps in the images/ folder
 * Default framerate of video is 1 frame / second. If you find this too slow, feel free to change it!
 * Please pay attention to the terminal when the GUI pops up for custom maze drawing
-* Close the GUI when you are finished drawing your maze
-* I did have it working with multiple sinks but found the results to be inconsistent, so I removed this feature the final version
-* Only tested on Windows 10
+* Only tested on Windows
+* References provided in the PDF writeup
